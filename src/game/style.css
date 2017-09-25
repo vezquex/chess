@@ -1,0 +1,36 @@
+.row {
+  display: flex;
+  flex: 1;
+}
+.space {
+  background: 0;
+  border: 0;
+  cursor: pointer;
+  display: flex;
+  flex: 1;
+  font-size: inherit;
+  line-height: 0;
+  outline: 0;
+}
+.space[disabled] {
+  cursor: auto;
+}
+.space-content {
+  align-self: center;
+  flex: 1;
+  text-align: center;
+}
+.p0 {color:#C00;}
+.p1 {color:#0CC;}
+.bg0, button.bg0:hover[disabled] {
+  background: #101010; }
+.bg1, button.bg1:hover[disabled] {
+  background: 0; }
+.t0.bg0.available { background: #180808; }
+.t0.bg1.available { background: #100000; }
+.t1.bg0.available { background: #081818; }
+.t1.bg1.available { background: #001010; }
+.t0.bg0.available:hover, .t0.bg0.selectable:hover { background: #201010; }
+.t0.bg1.available:hover, .t0.bg1.selectable:hover { background: #200000; }
+.t1.bg0.available:hover, .t1.bg0.selectable:hover { background: #102020; }
+.t1.bg1.available:hover, .t1.bg1.selectable:hover { background: #002020; }

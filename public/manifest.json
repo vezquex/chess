@@ -1,0 +1,15 @@
+{
+  "short_name": "Chess",
+  "name": "Chess Game",
+  "icons": [
+    {
+      "src": "favicon.ico?v=1",
+      "sizes": "64x64",
+      "type": "image/png"
+    }
+  ],
+  "start_url": "./index.html",
+  "display": "standalone",
+  "theme_color": "#ffffff",
+  "background_color": "#000000"
+}

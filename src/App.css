@@ -1,0 +1,18 @@
+* {
+  box-sizing: border-box;
+}
+html, body {
+  height: 100%;
+}
+body {
+  background: #000;
+  display: flex;
+}
+body, button {
+  color: #FFF;
+}
+#root, .App, .Chess {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
