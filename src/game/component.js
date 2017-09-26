@@ -185,11 +185,26 @@ const players = [
   },
 ]
 
+const kings = ['♔','♚']
+const losers = board => {
+  return kings.map((k, p) => {
+    const i = board.indexOf(k)
+    if(i === MISSING) return p
+    return void 0
+    // const c = getPos(k)
+    // const threat = board.some((s, j) => (
+    //   pieces_by_char[s].move(j, i, board)
+    // ))
+    // return
+  }).filter(r => r !== void 0)
+}
+
 class Chess extends Component {
   constructor(){
     super()
     this.state = {
       board: board(),
+      nonlosers: players.map((_,i)=>i),
       selection: MISSING,
       turn: 0,
     }
@@ -208,8 +223,10 @@ class Chess extends Component {
         board[i] = board[selection]
         board[selection] = ''
       }
+      const ls = losers(board)
       return {
         board,
+        nonlosers: players.map((_, i)=>i).filter(i=>!ls.includes(i)),
         selection: MISSING,
         turn: (turn + 1) % players.length,
       }
@@ -217,17 +234,19 @@ class Chess extends Component {
   }
   render(){
     const {state} = this
-    const {board, selection, turn} = state
+    const {board, nonlosers, selection, turn} = state
     const spaces = Array(SIZE*SIZE)
-    const sp = (selection > MISSING) && pieces_by_char[board[selection]]
+    const winner = (nonlosers.length === 1) && nonlosers[0]
+    const wp = (winner > MISSING) && players[winner]
+    const sp = !wp && (selection > MISSING) && pieces_by_char[board[selection]]
     for(let i = spaces.length - 1; i >= 0; --i){
       const char = board[i]
       const piece = pieces_by_char[char]
       const {p} = piece
-      const selected = (i === selection)
+      const selected = !wp && (i === selection)
       const available = sp && sp.move(selection, i, board)
-      const selectable = !selected && (p === turn)
-      const clickable = selectable || selected || available
+      const selectable = !wp && !selected && (p === turn)
+      const clickable = !wp && (selectable || selected || available)
       spaces[i] = (
         <button
           className={[
@@ -259,7 +278,10 @@ class Chess extends Component {
         <div className="Chess" style={{width:length, height:length, fontSize: length/10}}>
           {rows}
         </div>
-        <p className={'p'+turn}>{players[turn].name} to move</p>
+        {wp
+          ? <p><span className={'p'+winner}>{wp.name}</span> is the victor</p>
+          : <p className={'p'+turn}>{players[turn].name} to move</p>
+        }
       </div>
     )
   }
