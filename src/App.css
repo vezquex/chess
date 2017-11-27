@@ -11,7 +11,7 @@ body {
 body, button {
   color: #FFF;
 }
-#root, .App, .Chess {
+#root, .App {
   display: flex;
   flex-direction: column;
   flex: 1;

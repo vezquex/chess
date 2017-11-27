@@ -1,5 +1,12 @@
-import React, {Component} from 'react';
+import React, {Component, createElement as h} from 'react';
 import './style.css';
+import bishopFn from './piece/bishopFn'
+import kingFn from './piece/kingFn'
+import knightFn from './piece/knightFn'
+import pawnFnNorth from './piece/pawnFnNorth'
+import pawnFnSouth from './piece/pawnFnSouth'
+import queenFn from './piece/queenFn'
+import rookFn from './piece/rookFn'
 
 const MISSING = -1
 const IMISSING = {i:MISSING}
@@ -23,19 +30,26 @@ const getX = i => i % SIZE
 const getY = i => Math.floor(i / SIZE)
 const getPos = i => [getX(i), getY(i)]
 const getI = ([x,y]) => (y * SIZE) + x
-const getP = (board, i) => pieces_by_char[board[i]].p
+const getP = (board, i) => (pieces_by_char[board[i]] || {}).p
 const add = (a,b) => a.map((ai, i) => ai + b[i])
 // const subtract = (a,b) => a.map((ai, i) => ai - b[i])
 const eq = (a, b) => a.every((ai, i) => ai === b[i])
 const inBounds = p => p.every(i => (i >= 0) && (i < SIZE))
-const jump = (vs, a, b, board) => vs.some(
-  v => eq(add(getPos(a), v), getPos(b))
+const jump = (vs, a, b, board) => {
+  const posA = getPos(a)
+  const posB = getPos(b)
+  return vs.some(v =>
+    inBounds(posB)
+    && eq(add(posA, v), posB)
     && (getP(board, a) !== getP(board, b))
-)
-const jumpEmpty = (vs, a, b, board) => vs.some(
-  v => eq(add(getPos(a), v), getPos(b))
-    && !(getP(board, b) >= 0)
-)
+  )
+}
+const isEmpty = (b, board) => {
+  return !(getP(board, b) >= 0)
+}
+const jumpEmpty = (v, a, b, board) => {
+  return eq(add(v, getPos(a)), getPos(b)) && isEmpty(b, board)
+}
 const attack = (vs, a, b, board) => vs.some(v => {
   if(!eq(add(getPos(a), v), getPos(b))) return false
   const bp = getP(board, b)
@@ -119,10 +133,10 @@ const enPassantPawn = (attacks, a, b, board) => {
   // capture can only be made on the move immediately after the opposing pawn makes the double-step move.
   return IMISSING
 }
-const pawnMove = (home, homeJump, jumps, attacks, a, b, board) => (
-  jumpEmpty(jumps, a, b, board)
+const pawnMove = (home, jump, homeSlide, attacks, a, b, board) => (
+  jumpEmpty(jump, a, b, board)
     || attack(attacks, a, b, board)
-    || (home(getPos(a)) && jumpEmpty([homeJump], a, b, board))
+    || (home(getPos(a)) && isEmpty(getI(add(getPos(a), jump)), board) && jumpEmpty(homeSlide, a, b, board))
     || (enPassantPawn(attacks, a, b, board).i > MISSING)
   )
 const pawnSpecial = (last, a, b, board) => {
@@ -138,49 +152,51 @@ const rookMove = walk.bind(null, LAST, cardinals)
 const pieces_by_char = {
   '': {},
   ' ': {},
-  '♗': {p:0, type:'bishop', move:bishopMove},
-  '♔': {p:0, type:'king',
+  '♗': {p:0, type:'bishop', move:bishopMove, imgFn:bishopFn},
+  '♔': {p:0, type:'king', imgFn:kingFn,
     move: kingMove.bind(null, castleWalksHorizontal, castleRooksHorizontal, king0Home),
     special: castleHorizontal.bind(null, king0Home),
   },
-  '♘': {p:0, type:'knight', move:knightMove},
-  '♙': {p:0, type:'pawn',
+  '♘': {p:0, type:'knight', move:knightMove, imgFn:knightFn},
+  '♙': {p:0, type:'pawn', imgFn:pawnFnNorth,
     move: pawnMove.bind(null,
       v => (v[1] + 2) === SIZE,
+      [0,-1],
       [0,-2],
-      [[0,-1]],
       [[1,-1], [-1,-1]]
     ),
     special: pawnSpecial.bind(null, (_,y)=>y===0),
   },
-  '♕': {p:0, type:'queen', move:queenMove},
-  '♖': {p:0, type:'rook', move:rookMove},
-  '♝': {p:1, type:'bishop', move:bishopMove},
-  '♚': {p:1, type:'king',
+  '♕': {p:0, type:'queen', move:queenMove, imgFn:queenFn},
+  '♖': {p:0, type:'rook', move:rookMove, imgFn:rookFn},
+  '♝': {p:1, type:'bishop', move:bishopMove, imgFn:bishopFn},
+  '♚': {p:1, type:'king', imgFn:kingFn,
     move: kingMove.bind(null, castleWalksHorizontal, castleRooksHorizontal, king1Home),
     special: castleHorizontal.bind(null, king1Home),
   },
-  '♞': {p:1, type:'knight', move:knightMove},
-  '♟': {p:1, type:'pawn',
+  '♞': {p:1, type:'knight', move:knightMove, imgFn:knightFn},
+  '♟': {p:1, type:'pawn', imgFn:pawnFnSouth,
     move: pawnMove.bind(null,
       v => v[1] === 1,
+      [0,1],
       [0,2],
-      [[0,1]],
       [[1,1], [-1,1]]
     ),
     special: pawnSpecial.bind(null, (_,y)=>y===LAST),
   },
-  '♛': {p:1, type:'queen', move:queenMove},
-  '♜': {p:1, type:'rook', move:rookMove},
+  '♛': {p:1, type:'queen', move:queenMove, imgFn:queenFn},
+  '♜': {p:1, type:'rook', move:rookMove, imgFn:rookFn},
 }
 
 const players = [
   {
-    name: 'Red',
+    name: 'Cyan',
+    color:'#0FF',
     // symbols: '♔♕♖♗♘♙',
   },
   {
-    name: 'Teal',
+    name: 'Red',
+    color:'#F00',
     // symbols: '♚♛♜♝♞♟',
   },
 ]
@@ -236,9 +252,13 @@ class Chess extends Component {
     const {state} = this
     const {board, nonlosers, selection, turn} = state
     const spaces = Array(SIZE*SIZE)
+    const player = players[turn]
     const winner = (nonlosers.length === 1) && nonlosers[0]
     const wp = (winner > MISSING) && players[winner]
     const sp = !wp && (selection > MISSING) && pieces_by_char[board[selection]]
+    const width = Math.min(window.innerHeight, window.innerWidth)
+    const size = width * .125
+    const fontSize = size*.5
     for(let i = spaces.length - 1; i >= 0; --i){
       const char = board[i]
       const piece = pieces_by_char[char]
@@ -246,13 +266,15 @@ class Chess extends Component {
       const selected = !wp && (i === selection)
       const available = sp && sp.move(selection, i, board)
       const selectable = !wp && !selected && (p === turn)
+      const fill = (p > MISSING) ? players[p].color : '0'
       const clickable = !wp && (selectable || selected || available)
+      const img = piece.img || (piece.imgFn && piece.imgFn({board, getI, getPos, i, piece}))
       spaces[i] = (
         <button
           className={[
             'space',
+            'p'+p,
             't'+turn,
-            (p > MISSING) ? 'p'+p : '',
             ((getY(i) % 2) === (i % 2)) ? 'bg0' : 'bg1',
             (available || selected) ? 'available' : '',
             selectable ? 'selectable' : '',
@@ -260,9 +282,12 @@ class Chess extends Component {
           disabled={!clickable}
           key={i}
           onClick={()=>this.clickSpace(i)}
+          style={{height:size, width:size, padding:0, borderWidth:Math.max(1, size/16)}}
         >
-          <div className="space-content">
-            {char}
+          <div className="space-content"
+            style={{padding:size/16}}
+          >
+            {img ? h('div', {style:{fill}}, img) : char}
           </div>
         </button>
       )
@@ -272,15 +297,14 @@ class Chess extends Component {
         {spaces.slice(i*SIZE, (i+1)*SIZE)}
       </div>
     )
-    const length = Math.min(window.innerHeight, window.innerWidth)
     return (
-      <div className="Chess">
-        <div className="Chess" style={{width:length, height:length, fontSize: length/10}}>
+      <div className="Game">
+        <div className="Chess" style={{width, height:width, fontSize}}>
           {rows}
         </div>
         {wp
-          ? <p><span className={'p'+winner}>{wp.name}</span> is the victor</p>
-          : <p className={'p'+turn}>{players[turn].name} to move</p>
+          ? <p><span style={{color:wp.color}}>{wp.name}</span> is the victor</p>
+          : <p style={{color:player.color}}>{player.name} to move</p>
         }
       </div>
     )

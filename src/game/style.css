@@ -1,13 +1,20 @@
+.Game {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+}
+p {
+  padding: 0 1em;
+}
 .row {
   display: flex;
-  flex: 1;
 }
 .space {
   background: 0;
-  border: 0;
+  border-color: transparent;
+  border-style: solid;
   cursor: pointer;
-  display: flex;
-  flex: 1;
+  display: inline-flex;
   font-size: inherit;
   line-height: 0;
   outline: 0;
@@ -17,20 +24,21 @@
 }
 .space-content {
   align-self: center;
+  /* border-radius: 12.5%; */
   flex: 1;
   text-align: center;
 }
-.p0 {color:#C00;}
-.p1 {color:#0CC;}
+.goal {fill:#FC0;}
+.off {opacity:.5}
 .bg0, button.bg0:hover[disabled] {
   background: #101010; }
 .bg1, button.bg1:hover[disabled] {
   background: 0; }
-.t0.bg0.available { background: #180808; }
-.t0.bg1.available { background: #100000; }
-.t1.bg0.available { background: #081818; }
-.t1.bg1.available { background: #001010; }
-.t0.bg0.available:hover, .t0.bg0.selectable:hover { background: #201010; }
-.t0.bg1.available:hover, .t0.bg1.selectable:hover { background: #200000; }
-.t1.bg0.available:hover, .t1.bg0.selectable:hover { background: #102020; }
-.t1.bg1.available:hover, .t1.bg1.selectable:hover { background: #002020; }
+.p0.t0 .space-content, .t0.available { background-color: rgba(0,255,255,.05); }
+.p1.t1 .space-content, .t1.available { background-color: rgba(255,0,0,.05); }
+.t0.available { border-color: rgba(0,255,255,.1); }
+.t1.available { border-color: rgba(255,0,0,.1); }
+.t1.bg0.available:hover, .t1.bg0.selectable:hover { background: #201010; }
+.t1.bg1.available:hover, .t1.bg1.selectable:hover { background: #200000; }
+.t0.bg0.available:hover, .t0.bg0.selectable:hover { background: #102020; }
+.t0.bg1.available:hover, .t0.bg1.selectable:hover { background: #002020; }
