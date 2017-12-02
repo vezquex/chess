@@ -8,11 +8,12 @@ import pawnFnSouth from './piece/pawnFnSouth'
 import queenFn from './piece/queenFn'
 import rookFn from './piece/rookFn'
 
+const BLANK = ''
 const MISSING = -1
 const IMISSING = {i:MISSING}
 const SIZE = 8
 const LAST = SIZE - 1
-const row = () => Array(SIZE).fill('')
+const row = () => Array(SIZE).fill(BLANK)
 
 // The king must be placed on a square between the two rooks.
 // The bishops must be placed on opposite-colored squares.
@@ -21,7 +22,8 @@ const board = () => {
   return [].concat(
     [...'♜♞♝♛♚♝♞♜'],//.sort(()=>Math.round(Math.random())*2-1),
     [...'♟♟♟♟♟♟♟♟'],
-    row(),row(),row(),row(),
+    // row(),row(),row(),row(),
+    row(),[...'♟♙♙♟♟♟♟♟'],row(),row(),
     [...'♙♙♙♙♙♙♙♙'],
     [...'♖♘♗♕♔♗♘♖'],
   )
@@ -109,7 +111,7 @@ const castle = (castleWalks, rooks, rookJumps, home, a, b, board) => {
   const {i,j} = castleRook(castleWalks, rooks, home, a, b, board)
   if(i > MISSING){
     board[getI(add(getPos(a), rookJumps[j]))] = board[i]
-    board[i] = ''
+    board[i] = BLANK
   }
   return true // move
 }
@@ -123,35 +125,45 @@ const king1Home = [4,0]
 const knightMove = jump.bind(null,
   [[1,2], [1,-2], [-1,2], [-1,-2], [2,1], [2,-1], [-2,1], [-2,-1]]
 )
-const enPassantPawn = (attacks, a, b, board) => {
+const enPassant = (a, b, board) => {
   const ap = getPos(a)
-  // capturing pawn must be on its fifth rank.
-  // jumps.some(jump => jump[0]===0 && eq())
-  if(!ap) return IMISSING
-  // captured pawn must be on an adjacent file and must have just moved two squares in a single move (i.e. a double-step move).
-  // if() return IMISSING
-  // capture can only be made on the move immediately after the opposing pawn makes the double-step move.
-  return IMISSING
+  const y = ap[1]
+  const pa = pieces_by_char[board[a]]
+  if(pa && (y !== pa.fifth)) return false
+  return pa && pa.attacks.some(k => {
+    const cp = add(ap, k)
+    if(!eq(cp, getPos(b))) return false
+    const op = pieces_by_char[board[getI([cp[0], y])]]
+    return (
+      op
+      && (op.type === 'pawn')
+      && (op.p !== getP(board, a))
+    )
+  })
 }
 const pawnMove = (home, jump, homeSlide, attacks, a, b, board) => (
   jumpEmpty(jump, a, b, board)
     || attack(attacks, a, b, board)
     || (home(getPos(a)) && isEmpty(getI(add(getPos(a), jump)), board) && jumpEmpty(homeSlide, a, b, board))
-    || (enPassantPawn(attacks, a, b, board).i > MISSING)
+    || (enPassant(a, b, board))
   )
 const pawnSpecial = (last, a, b, board) => {
-  // TODO: promotion
-  if(last(b)){
-    return false
+  if(enPassant(a, b, board)){
+    board[getI([getX(b), getY(a)])] = BLANK
+    return true
   }
-  // enPassantPawn(jumps, attacks, a, b, board)
+  // TODO: promotion
+  // if(y === last){
+  //   return false
+  // }
   return true
 }
 const queenMove = walk.bind(null, LAST, directions)
 const rookMove = walk.bind(null, LAST, cardinals)
+const p0pawnAttacks = [[1,-1], [-1,-1]]
+const p1pawnAttacks = [[1,1], [-1,1]]
 const pieces_by_char = {
-  '': {},
-  ' ': {},
+  [BLANK]: {},
   '♗': {p:0, type:'bishop', move:bishopMove, imgFn:bishopFn},
   '♔': {p:0, type:'king', imgFn:kingFn,
     move: kingMove.bind(null, castleWalksHorizontal, castleRooksHorizontal, king0Home),
@@ -159,13 +171,15 @@ const pieces_by_char = {
   },
   '♘': {p:0, type:'knight', move:knightMove, imgFn:knightFn},
   '♙': {p:0, type:'pawn', imgFn:pawnFnNorth,
+    attacks: p0pawnAttacks,
+    fifth: 3,
     move: pawnMove.bind(null,
       v => (v[1] + 2) === SIZE,
       [0,-1],
       [0,-2],
-      [[1,-1], [-1,-1]]
+      p0pawnAttacks,
     ),
-    special: pawnSpecial.bind(null, (_,y)=>y===0),
+    special: pawnSpecial.bind(null, 0),
   },
   '♕': {p:0, type:'queen', move:queenMove, imgFn:queenFn},
   '♖': {p:0, type:'rook', move:rookMove, imgFn:rookFn},
@@ -176,13 +190,15 @@ const pieces_by_char = {
   },
   '♞': {p:1, type:'knight', move:knightMove, imgFn:knightFn},
   '♟': {p:1, type:'pawn', imgFn:pawnFnSouth,
+    attacks: p1pawnAttacks,
+    fifth: 4,
     move: pawnMove.bind(null,
       v => v[1] === 1,
       [0,1],
       [0,2],
-      [[1,1], [-1,1]]
+      p1pawnAttacks,
     ),
-    special: pawnSpecial.bind(null, (_,y)=>y===LAST),
+    special: pawnSpecial.bind(null, LAST),
   },
   '♛': {p:1, type:'queen', move:queenMove, imgFn:queenFn},
   '♜': {p:1, type:'rook', move:rookMove, imgFn:rookFn},
