@@ -1,5 +1,5 @@
-import React, {Component, createElement as h} from 'react';
-import './style.css';
+import React, {Component, createElement as h} from 'react'
+import './style.css'
 import bishopFn from './piece/bishopFn'
 import kingFn from './piece/kingFn'
 import knightFn from './piece/knightFn'
@@ -22,8 +22,7 @@ const board = () => {
   return [].concat(
     [...'♜♞♝♛♚♝♞♜'],//.sort(()=>Math.round(Math.random())*2-1),
     [...'♟♟♟♟♟♟♟♟'],
-    // row(),row(),row(),row(),
-    row(),[...'♟♙♙♟♟♟♟♟'],row(),row(),
+    row(),row(),row(),row(),
     [...'♙♙♙♙♙♙♙♙'],
     [...'♖♘♗♕♔♗♘♖'],
   )
@@ -143,19 +142,20 @@ const enPassant = (a, b, board) => {
 }
 const pawnMove = (home, jump, homeSlide, attacks, a, b, board) => (
   jumpEmpty(jump, a, b, board)
-    || attack(attacks, a, b, board)
-    || (home(getPos(a)) && isEmpty(getI(add(getPos(a), jump)), board) && jumpEmpty(homeSlide, a, b, board))
-    || (enPassant(a, b, board))
-  )
-const pawnSpecial = (last, a, b, board) => {
+  || attack(attacks, a, b, board)
+  || (home(getPos(a)) && isEmpty(getI(add(getPos(a), jump)), board) && jumpEmpty(homeSlide, a, b, board))
+  || (enPassant(a, b, board))
+)
+const pawnSpecial = (last, promo, a, b, board) => {
   if(enPassant(a, b, board)){
     board[getI([getX(b), getY(a)])] = BLANK
     return true
   }
-  // TODO: promotion
-  // if(y === last){
-  //   return false
-  // }
+  if(getY(b) === last){
+    board[a] = BLANK
+    board[b] = promo
+    return false
+  }
   return true
 }
 const queenMove = walk.bind(null, LAST, directions)
@@ -179,7 +179,7 @@ const pieces_by_char = {
       [0,-2],
       p0pawnAttacks,
     ),
-    special: pawnSpecial.bind(null, 0),
+    special: pawnSpecial.bind(null, 0, '♕'),
   },
   '♕': {p:0, type:'queen', move:queenMove, imgFn:queenFn},
   '♖': {p:0, type:'rook', move:rookMove, imgFn:rookFn},
@@ -198,7 +198,7 @@ const pieces_by_char = {
       [0,2],
       p1pawnAttacks,
     ),
-    special: pawnSpecial.bind(null, LAST),
+    special: pawnSpecial.bind(null, LAST, '♛'),
   },
   '♛': {p:1, type:'queen', move:queenMove, imgFn:queenFn},
   '♜': {p:1, type:'rook', move:rookMove, imgFn:rookFn},
@@ -253,7 +253,7 @@ class Chess extends Component {
     this.setState(({board, selection, turn})=>{
       if(!piece.special || piece.special(selection, i, board)){
         board[i] = board[selection]
-        board[selection] = ''
+        board[selection] = BLANK
       }
       const ls = losers(board)
       return {
@@ -290,7 +290,7 @@ class Chess extends Component {
           className={[
             'space',
             'p'+p,
-            't'+turn,
+            wp ? '' : ('t'+turn),
             ((getY(i) % 2) === (i % 2)) ? 'bg0' : 'bg1',
             (available || selected) ? 'available' : '',
             selectable ? 'selectable' : '',
@@ -327,4 +327,4 @@ class Chess extends Component {
   }
 }
 
-export default Chess;
+export default Chess

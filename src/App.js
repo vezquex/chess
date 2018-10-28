@@ -1,8 +1,8 @@
-import React, {Component} from 'react';
-// import {Helmet} from 'react-helmet';
-import Game from './game/component';
-// import logo from './logo.svg';
-import './App.css';
+import React, {Component} from 'react'
+// import {Helmet} from 'react-helmet'
+import Game from './game/component'
+// import logo from './logo.svg'
+import './App.css'
 const title = 'Chess'
 
 class App extends Component {
