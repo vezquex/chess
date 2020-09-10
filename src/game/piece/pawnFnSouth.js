@@ -6,7 +6,7 @@ const [a, b] = getPos(i)
 const two = piece.move(i, getI([a, b+2]), board)
 const y = '3'
 return h('svg', {version:'1.1', xmlns:'http://www.w3.org/2000/svg',
-viewBox:'0 0 5 5'},
+viewBox:'0 0 5 5', strokeWidth:0},
 h('defs', null,
   // h('circle', {id, r:.5, transform:'translate(.5 .5)'}),
   h('rect', {id, height:'1', width:'1'}),

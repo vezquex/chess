@@ -3,12 +3,13 @@ import './style.css'
 import bishopFn from './piece/bishopFn'
 import kingFn from './piece/kingFn'
 import knightFn from './piece/knightFn'
+import nightriderFn from './piece/nightriderFn'
 import pawnFnNorth from './piece/pawnFnNorth'
 import pawnFnSouth from './piece/pawnFnSouth'
 import queenFn from './piece/queenFn'
 import rookFn from './piece/rookFn'
 
-const BLANK = ''
+const BLANK = ' '
 const MISSING = -1
 const IMISSING = {i:MISSING}
 const SIZE = 8
@@ -20,11 +21,11 @@ const row = () => Array(SIZE).fill(BLANK)
 // Mirror both sides.
 const board = () => {
   return [].concat(
-    [...'♜♞♝♛♚♝♞♜'],//.sort(()=>Math.round(Math.random())*2-1),
-    [...'♟♟♟♟♟♟♟♟'],
+    [...'rnbqkbnr'],
+    [...'pppppppp'],
     row(),row(),row(),row(),
-    [...'♙♙♙♙♙♙♙♙'],
-    [...'♖♘♗♕♔♗♘♖'],
+    [...'PPPPPPPP'],
+    [...'RNBQKBNR'],
   )
 }
 const getX = i => i % SIZE
@@ -121,9 +122,9 @@ const castleHorizontal = castle.bind(null,
 )
 const king0Home = [4,LAST]
 const king1Home = [4,0]
-const knightMove = jump.bind(null,
-  [[1,2], [1,-2], [-1,2], [-1,-2], [2,1], [2,-1], [-2,1], [-2,-1]]
-)
+const knightJumps = [[1,2], [1,-2], [-1,2], [-1,-2], [2,1], [2,-1], [-2,1], [-2,-1]]
+const knightMove = jump.bind(null, knightJumps)
+const nightriderMove = walk.bind(null, Math.floor((LAST)/2), knightJumps)
 const enPassant = (a, b, board) => {
   const ap = getPos(a)
   const y = ap[1]
@@ -164,13 +165,13 @@ const p0pawnAttacks = [[1,-1], [-1,-1]]
 const p1pawnAttacks = [[1,1], [-1,1]]
 const pieces_by_char = {
   [BLANK]: {},
-  '♗': {p:0, type:'bishop', move:bishopMove, imgFn:bishopFn},
-  '♔': {p:0, type:'king', imgFn:kingFn,
+  'B': {p:0, type:'bishop', move:bishopMove, imgFn:bishopFn},
+  'K': {p:0, type:'king', imgFn:kingFn,
     move: kingMove.bind(null, castleWalksHorizontal, castleRooksHorizontal, king0Home),
     special: castleHorizontal.bind(null, king0Home),
   },
-  '♘': {p:0, type:'knight', move:knightMove, imgFn:knightFn},
-  '♙': {p:0, type:'pawn', imgFn:pawnFnNorth,
+  'N': {p:0, type:'knight', move:knightMove, imgFn:knightFn},
+  'P': {p:0, type:'pawn', imgFn:pawnFnNorth,
     attacks: p0pawnAttacks,
     fifth: 3,
     move: pawnMove.bind(null,
@@ -181,15 +182,15 @@ const pieces_by_char = {
     ),
     special: pawnSpecial.bind(null, 0, '♕'),
   },
-  '♕': {p:0, type:'queen', move:queenMove, imgFn:queenFn},
-  '♖': {p:0, type:'rook', move:rookMove, imgFn:rookFn},
-  '♝': {p:1, type:'bishop', move:bishopMove, imgFn:bishopFn},
-  '♚': {p:1, type:'king', imgFn:kingFn,
+  'Q': {p:0, type:'queen', move:queenMove, imgFn:queenFn},
+  'R': {p:0, type:'rook', move:rookMove, imgFn:rookFn},
+  'b': {p:1, type:'bishop', move:bishopMove, imgFn:bishopFn},
+  'k': {p:1, type:'king', imgFn:kingFn,
     move: kingMove.bind(null, castleWalksHorizontal, castleRooksHorizontal, king1Home),
     special: castleHorizontal.bind(null, king1Home),
   },
-  '♞': {p:1, type:'knight', move:knightMove, imgFn:knightFn},
-  '♟': {p:1, type:'pawn', imgFn:pawnFnSouth,
+  'n': {p:1, type:'knight', move:knightMove, imgFn:knightFn},
+  'p': {p:1, type:'pawn', imgFn:pawnFnSouth,
     attacks: p1pawnAttacks,
     fifth: 4,
     move: pawnMove.bind(null,
@@ -200,8 +201,10 @@ const pieces_by_char = {
     ),
     special: pawnSpecial.bind(null, LAST, '♛'),
   },
-  '♛': {p:1, type:'queen', move:queenMove, imgFn:queenFn},
-  '♜': {p:1, type:'rook', move:rookMove, imgFn:rookFn},
+  'q': {p:1, type:'queen', move:queenMove, imgFn:queenFn},
+  'r': {p:1, type:'rook', move:rookMove, imgFn:rookFn},
+  'I': {p:0, type:'nightrider', move:nightriderMove, imgFn:nightriderFn},
+  'i': {p:1, type:'nightrider', move:nightriderMove, imgFn:nightriderFn},
 }
 
 const players = [
@@ -303,7 +306,7 @@ class Chess extends Component {
           <div className="space-content"
             style={{padding:size/16}}
           >
-            {img ? h('div', {style:{fill}}, img) : char}
+            {img ? h('div', {style:{fill, stroke:fill}}, img) : char}
           </div>
         </button>
       )

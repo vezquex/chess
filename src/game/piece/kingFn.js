@@ -4,7 +4,7 @@ const xlinkHref = '#'+id
 export default ({board, getI, getPos, i, piece}) => {
 const [x, y] = getPos(i)
 return h('svg', {version:'1.1', xmlns:'http://www.w3.org/2000/svg',
-viewBox:'0 0 5 5'},
+viewBox:'0 0 5 5', strokeWidth:0},
 h('defs', null,
   h('rect', {id:'kingFnGoal', height:'1', width:'1'}),
   // h('circle', {id, r:.5, transform:'translate(.5 .5)'}),
