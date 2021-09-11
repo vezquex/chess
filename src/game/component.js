@@ -1,6 +1,9 @@
 import React, {Component, createElement as h} from 'react'
 import './style.css'
+import alfilFn from './piece/alfilFn'
 import bishopFn from './piece/bishopFn'
+import dabbabaFn from './piece/dabbabaFn'
+import ferzFn from './piece/ferzFn'
 import kingFn from './piece/kingFn'
 import knightFn from './piece/knightFn'
 import nightriderFn from './piece/nightriderFn'
@@ -8,41 +11,103 @@ import pawnFnNorth from './piece/pawnFnNorth'
 import pawnFnSouth from './piece/pawnFnSouth'
 import queenFn from './piece/queenFn'
 import rookFn from './piece/rookFn'
+import wazirFn from './piece/wazirFn'
+
+const SIZE = 10
 
 const BLANK = ' '
 const MISSING = -1
 const IMISSING = {i:MISSING}
-const SIZE = 8
 const LAST = SIZE - 1
 const row = () => Array(SIZE).fill(BLANK)
+// const BAG = [...'BBKRR']
+// const BAG = [...'BBKNNQRR']
+// const BAG = [...'RNBKQBNR']
+const BAG = [...'BBIIKNNRRQ']
+const PAWNLIKE = [...'ADFPW']
 
-// The king must be placed on a square between the two rooks.
-// The bishops must be placed on opposite-colored squares.
-// Mirror both sides.
+const mapToLowerCase = (a)=> a.map(x => x.toLowerCase())
+
 const board = () => {
+  let bag = BAG.slice()
+  const castling_rule = ((bag.indexOf('K') !== MISSING) && ((bag.filter(p => p === 'R').length) >= 2))
+  const two_bishops_rule = (bag.filter(p => p === 'B').length) === 2
+  const pawnlike = PAWNLIKE.slice()
+  const row2p0 = Array(SIZE).fill().map(() => pawnlike[Math.floor(pawnlike.length * Math.random())])
+  const row2p1 = mapToLowerCase(row2p0)
+  let rack = []
+  let rejected = []
+  while(bag.length){
+    let bag_i = Math.floor(bag.length * Math.random())
+    let piece = bag.splice(bag_i, 1)[0]
+    // const bag_king = (bag.indexOf('K') !== MISSING)
+    // const bag_rook = (bag.indexOf('R') !== MISSING)
+    // const bishop = (piece === 'B')
+    // const rack_bishop_i = rack.indexOf('B')
+    // const rack_bishop = (rack_bishop_i !== MISSING)
+    // const rack_king = (rack.indexOf('K') !== MISSING)
+    // const rack_rook = (rack.indexOf('R') !== MISSING)
+    // const king = (piece === 'K')
+    // const rook = (piece === 'R')
+    // // rejected pieces
+    // if(
+    //   // king does not follow rook
+    //   (castling_rule && king && !rack_rook)
+    //   ||
+    //   // last rook does not follow king
+    //   (castling_rule && rook && !rack_king && !bag_rook)
+    //   ||
+    //   // 2 bishops and same color
+    //   (two_bishops_rule && rack_bishop && bishop && ((rack_bishop_i % 2) === (rack.length % 2)))
+    //   ||
+    //   // 2 bishops and penultimate was not bishop but had to be due to color
+    //   (two_bishops_rule && rack_bishop && !bishop && (rack.length === LAST-1) && ((rack_bishop_i % 2) === (LAST % 2)))
+    // ){
+    //   rejected.push(piece)
+    // }
+    // else {
+      rack.push(piece)
+      bag = bag.concat(rejected)
+      rejected = []
+    // }
+  }
+  if(rack.length < SIZE){
+    throw(`
+    ${rack.length} of ${SIZE}
+    rack: ${rack.join('')}
+    rejected: ${rejected.join('')}
+    `)
+  }
+  // rack = bag
+  const rack1 = mapToLowerCase(rack)
   return [].concat(
-    [...'rnbqkbnr'],
-    [...'pppppppp'],
-    row(),row(),row(),row(),
-    [...'PPPPPPPP'],
-    [...'RNBQKBNR'],
+    rack1,
+    row2p1,
+    row(),
+    row(),
+    row(),
+    row(),
+    row(),
+    row(),
+    row2p0,
+    rack,
   )
 }
+const BOARD = board()
 const getX = i => i % SIZE
-const getY = i => Math.floor(i / SIZE)
+const getY = i => (i / SIZE) << 0
 const getPos = i => [getX(i), getY(i)]
-const getI = ([x,y]) => (y * SIZE) + x
+const getI = ([x, y]) => (y * SIZE) + x
 const getP = (board, i) => (pieces_by_char[board[i]] || {}).p
-const add = (a,b) => a.map((ai, i) => ai + b[i])
-// const subtract = (a,b) => a.map((ai, i) => ai - b[i])
-const eq = (a, b) => a.every((ai, i) => ai === b[i])
-const inBounds = p => p.every(i => (i >= 0) && (i < SIZE))
+const add2 = (a, b) => [ a[0] + b[0], a[1] + b[1] ]
+const eq2 = (a, b) => (a[0] === b[0]) && (a[1] === b[1])
+const inBounds2 = p => (p[0] >= 0) && (p[0] < SIZE) && (p[1] >= 0) && (p[1] < SIZE)
 const jump = (vs, a, b, board) => {
   const posA = getPos(a)
   const posB = getPos(b)
   return vs.some(v =>
-    inBounds(posB)
-    && eq(add(posA, v), posB)
+    inBounds2(posB)
+    && eq2(add2(posA, v), posB)
     && (getP(board, a) !== getP(board, b))
   )
 }
@@ -50,10 +115,10 @@ const isEmpty = (b, board) => {
   return !(getP(board, b) >= 0)
 }
 const jumpEmpty = (v, a, b, board) => {
-  return eq(add(v, getPos(a)), getPos(b)) && isEmpty(b, board)
+  return eq2(add2(v, getPos(a)), getPos(b)) && isEmpty(b, board)
 }
 const attack = (vs, a, b, board) => vs.some(v => {
-  if(!eq(add(getPos(a), v), getPos(b))) return false
+  if(!eq2(add2(getPos(a), v), getPos(b))) return false
   const bp = getP(board, b)
   return (bp >= 0) && (getP(board, a) !== bp)
 })
@@ -64,64 +129,77 @@ const walk = (d, vs, a, b, board)=>{
   return vs.some(v => {
     let avn, avnp, _d = d, match, vn = v
     do {
-      avn = add(a, vn)
-      if(!inBounds(avn)) return false
+      avn = add2(a, vn)
+      if(!inBounds2(avn)) return false
       avnp = getP(board, getI(avn))
       if(ap === avnp) return false
-      match = eq(avn, b)
+      match = eq2(avn, b)
       if(match) return true
       if(!match && (avnp >= 0)) return false
-      vn = add(vn, v)
+      vn = add2(vn, v)
     } while(--_d)
     return false
   })
 }
-const diagonals = [[1,1], [-1,1], [-1,-1], [1,-1]]
 const cardinals = [[0,1], [1,0], [-1,0], [0,-1]]
+const diagonals = [[1,1], [-1,1], [-1,-1], [1,-1]]
 const directions = cardinals.concat(diagonals)
+const alfilMove = jump.bind(null, diagonals.map(v=>add2(v,v)))
 const bishopMove = walk.bind(null, LAST, diagonals)
-const castleRook = (walks, rooks, home, a, b, board) => {
-  const ap = getPos(a)
-  const bp = getPos(b)
-  if(!eq(ap, home)) return IMISSING
-  const j = walks.vs.findIndex(v => {
-    let avn, avnp, {d} = walks, match, vn = v
-    do {
-      avn = add(ap, vn)
-      if(!inBounds(avn)) return false
-      avnp = getP(board, getI(avn))
-      if(avnp >= 0) return false
-      match = eq(avn, bp)
-      if(match) return (d === 1)
-      vn = add(vn, v)
-    } while(--d)
-    return false
-  })
-  if(j === MISSING) return IMISSING
-  const i = getI(add(ap, rooks[j]))
-  const rook = pieces_by_char[board[i]]
-  if((rook.type !== 'rook') || (rook.p !== getP(board, a))) return IMISSING
-  return {i,j}
-}
-const kingMove = (castleWalks, rooks, home, a, b, board) => {
+const dabbabaMove = jump.bind(null, cardinals.map(v=>add2(v,v)))
+const ferzMove = jump.bind(null, diagonals)
+const wazirMove = jump.bind(null, cardinals)
+// castling:
+// [TODO] king must not have moved
+// [TODO] rook must not have moved
+// [TODO] king must not be threatened
+// [TODO] all spaces in between must be empty
+// [TODO] destination spaces must be empty or occupied by this king and rook
+// [TODO] queen-side: K=2,0 R=3,0
+// [TODO] king-side: K=LAST-1,0 R=LAST-2,0
+
+// const castleRook = (destination, rooks, home, a, b, board) => {
+//   const ap = getPos(a)
+//   const bp = getPos(b)
+//   if(!eq2(ap, home)) return IMISSING
+//   const j = destination.vs.findIndex(v => {
+//     let avn, avnp, {d} = destination, match, vn = v
+//     do {
+//       avn = add2(ap, vn)
+//       if(!inBounds2(avn)) return false
+//       avnp = getP(board, getI(avn))
+//       if(avnp >= 0) return false
+//       match = eq2(avn, bp)
+//       if(match) return (d === 1)
+//       vn = add2(vn, v)
+//     } while(--d)
+//     return false
+//   })
+//   if(j === MISSING) return IMISSING
+//   const i = getI(add2(ap, rooks[j]))
+//   const rook = pieces_by_char[board[i]]
+//   if((rook.type !== 'rook') || (rook.p !== getP(board, a))) return IMISSING
+//   return {i,j}
+// }
+const kingMove = (castle_spaces, rooks, home, a, b, board) => {
   return jump(directions, a, b, board)
-    || (castleRook(castleWalks, rooks, home, a, b, board).i > MISSING)
+    // || (castleRook(castle_spaces, rooks, home, a, b, board).i > MISSING)
 }
-const castle = (castleWalks, rooks, rookJumps, home, a, b, board) => {
-  const {i,j} = castleRook(castleWalks, rooks, home, a, b, board)
-  if(i > MISSING){
-    board[getI(add(getPos(a), rookJumps[j]))] = board[i]
-    board[i] = BLANK
-  }
-  return true // move
-}
-const castleWalksHorizontal = {d:2, vs:[[-1,0], [1,0]]}
-const castleRooksHorizontal = [[-4,0], [3,0]]
-const castleHorizontal = castle.bind(null,
-  castleWalksHorizontal, castleRooksHorizontal, [[-1,0], [1,0]]
-)
-const king0Home = [4,LAST]
-const king1Home = [4,0]
+// const castle = (castle_spaces, rooks, rookJumps, home, a, b, board) => {
+//   const {i,j} = castleRook(castle_spaces, rooks, home, a, b, board)
+//   if(i > MISSING){
+//     board[getI(add2(getPos(a), rookJumps[j]))] = board[i]
+//     board[i] = BLANK
+//   }
+//   return true // move
+// }
+// const castle_spaces_horiz = {d:2, vs:[[-1,0], [1,0]]}
+// const castle_rooks_horiz = [[3,0], [LAST-2,0]]
+// const castleHorizontal = castle.bind(null,
+//   castle_spaces_horiz, castle_rooks_horiz, [[-1,0], [1,0]]
+// )
+// const king0Home = getPos(BOARD.indexOf('K'))
+// const king1Home = getPos(BOARD.indexOf('k'))
 const knightJumps = [[1,2], [1,-2], [-1,2], [-1,-2], [2,1], [2,-1], [-2,1], [-2,-1]]
 const knightMove = jump.bind(null, knightJumps)
 const nightriderMove = walk.bind(null, Math.floor((LAST)/2), knightJumps)
@@ -131,8 +209,8 @@ const enPassant = (a, b, board) => {
   const pa = pieces_by_char[board[a]]
   if(pa && (y !== pa.fifth)) return false
   return pa && pa.attacks.some(k => {
-    const cp = add(ap, k)
-    if(!eq(cp, getPos(b))) return false
+    const cp = add2(ap, k)
+    if(!eq2(cp, getPos(b))) return false
     const op = pieces_by_char[board[getI([cp[0], y])]]
     return (
       op
@@ -144,7 +222,7 @@ const enPassant = (a, b, board) => {
 const pawnMove = (home, jump, homeSlide, attacks, a, b, board) => (
   jumpEmpty(jump, a, b, board)
   || attack(attacks, a, b, board)
-  || (home(getPos(a)) && isEmpty(getI(add(getPos(a), jump)), board) && jumpEmpty(homeSlide, a, b, board))
+  || (home(getPos(a)) && isEmpty(getI(add2(getPos(a), jump)), board) && jumpEmpty(homeSlide, a, b, board))
   || (enPassant(a, b, board))
 )
 const pawnSpecial = (last, promo, a, b, board) => {
@@ -165,12 +243,32 @@ const p0pawnAttacks = [[1,-1], [-1,-1]]
 const p1pawnAttacks = [[1,1], [-1,1]]
 const pieces_by_char = {
   [BLANK]: {},
+  'A': {p:0, type:'alfil', move:alfilMove, imgFn:alfilFn},
+  'a': {p:1, type:'alfil', move:alfilMove, imgFn:alfilFn},
   'B': {p:0, type:'bishop', move:bishopMove, imgFn:bishopFn},
-  'K': {p:0, type:'king', imgFn:kingFn,
-    move: kingMove.bind(null, castleWalksHorizontal, castleRooksHorizontal, king0Home),
-    special: castleHorizontal.bind(null, king0Home),
-  },
+  'b': {p:1, type:'bishop', move:bishopMove, imgFn:bishopFn},
+  'D': {p:0, type:'dabbaba', move:dabbabaMove, imgFn:dabbabaFn},
+  'd': {p:1, type:'dabbaba', move:dabbabaMove, imgFn:dabbabaFn},
+  'F': {p:0, type:'ferz', move:ferzMove, imgFn:ferzFn},
+  'f': {p:1, type:'ferz', move:ferzMove, imgFn:ferzFn},
+  'I': {p:0, type:'nightrider', move:nightriderMove, imgFn:nightriderFn},
+  'i': {p:1, type:'nightrider', move:nightriderMove, imgFn:nightriderFn},
   'N': {p:0, type:'knight', move:knightMove, imgFn:knightFn},
+  'n': {p:1, type:'knight', move:knightMove, imgFn:knightFn},
+  'Q': {p:0, type:'queen', move:queenMove, imgFn:queenFn},
+  'q': {p:1, type:'queen', move:queenMove, imgFn:queenFn},
+  'R': {p:0, type:'rook', move:rookMove, imgFn:rookFn},
+  'r': {p:1, type:'rook', move:rookMove, imgFn:rookFn},
+  'W': {p:0, type:'wazir', move:wazirMove, imgFn:wazirFn},
+  'w': {p:1, type:'wazir', move:wazirMove, imgFn:wazirFn},
+  'K': {p:0, type:'king', imgFn:kingFn,
+    move: kingMove.bind(null, void 0 && castle_spaces_horiz, void 0 && castle_rooks_horiz, void 0 && king0Home),
+    special: void 0 && castleHorizontal.bind(null, void 0 && king0Home),
+  },
+  'k': {p:1, type:'king', imgFn:kingFn,
+    move: kingMove.bind(null, void 0 && castle_spaces_horiz, void 0 && castle_rooks_horiz, void 0 && king1Home),
+    special: void 0 && castleHorizontal.bind(null, void 0 && king1Home),
+  },
   'P': {p:0, type:'pawn', imgFn:pawnFnNorth,
     attacks: p0pawnAttacks,
     fifth: 3,
@@ -180,49 +278,26 @@ const pieces_by_char = {
       [0,-2],
       p0pawnAttacks,
     ),
-    special: pawnSpecial.bind(null, 0, '♕'),
+    special: pawnSpecial.bind(null, 0, 'Q'),
   },
-  'Q': {p:0, type:'queen', move:queenMove, imgFn:queenFn},
-  'R': {p:0, type:'rook', move:rookMove, imgFn:rookFn},
-  'b': {p:1, type:'bishop', move:bishopMove, imgFn:bishopFn},
-  'k': {p:1, type:'king', imgFn:kingFn,
-    move: kingMove.bind(null, castleWalksHorizontal, castleRooksHorizontal, king1Home),
-    special: castleHorizontal.bind(null, king1Home),
-  },
-  'n': {p:1, type:'knight', move:knightMove, imgFn:knightFn},
   'p': {p:1, type:'pawn', imgFn:pawnFnSouth,
     attacks: p1pawnAttacks,
-    fifth: 4,
+    fifth: (SIZE - 4),
     move: pawnMove.bind(null,
       v => v[1] === 1,
       [0,1],
       [0,2],
       p1pawnAttacks,
     ),
-    special: pawnSpecial.bind(null, LAST, '♛'),
+    special: pawnSpecial.bind(null, LAST, 'q'),
   },
-  'q': {p:1, type:'queen', move:queenMove, imgFn:queenFn},
-  'r': {p:1, type:'rook', move:rookMove, imgFn:rookFn},
-  'I': {p:0, type:'nightrider', move:nightriderMove, imgFn:nightriderFn},
-  'i': {p:1, type:'nightrider', move:nightriderMove, imgFn:nightriderFn},
 }
-
-const players = [
-  {
-    name: 'Cyan',
-    color:'#0FF',
-    // symbols: '♔♕♖♗♘♙',
-  },
-  {
-    name: 'Red',
-    color:'#F00',
-    // symbols: '♚♛♜♝♞♟',
-  },
-]
-
-const kings = ['♔','♚']
-const losers = board => {
-  return kings.map((k, p) => {
+// one type of goal piece per player
+const goals = ['K','k']
+// const goals = [].concat(BAG, PAWNLIKE, mapToLowerCase(BAG), mapToLowerCase(PAWNLIKE))
+goals.forEach(goal => pieces_by_char[goal].goal = true)
+const inactive_players = board => {
+  return goals.map((k, p) => {
     const i = board.indexOf(k)
     if(i === MISSING) return p
     return void 0
@@ -233,23 +308,39 @@ const losers = board => {
     // return
   }).filter(r => r !== void 0)
 }
+const players = [
+  {
+    name: 'Cyan',
+    color:'#00FFFF',
+  },
+  {
+    name: 'Red',
+    color:'#FF0000',
+  },
+]
+
+let newState = () => ({
+  board: board(),
+  active_players: players.map((_,i)=>i),
+  selection: MISSING,
+  turn: 0,
+})
 
 class Chess extends Component {
   constructor(){
     super()
-    this.state = {
-      board: board(),
-      nonlosers: players.map((_,i)=>i),
-      selection: MISSING,
-      turn: 0,
-    }
+    this.state = newState()
+  }
+  resetState(){
+    const state = newState()
+    this.setState(state)
   }
   clickSpace(i){
     const {board, selection} = this.state
     const match = (selection === i)
     const piece = pieces_by_char[board[selection]]
     if(match || (selection < 0) || !piece.move(selection, i, board)){
-      return this.setState(({selection})=>({
+      return this.setState(()=>({
         selection: match ? MISSING : i
       }))
     }
@@ -258,10 +349,10 @@ class Chess extends Component {
         board[i] = board[selection]
         board[selection] = BLANK
       }
-      const ls = losers(board)
+      const inactives = inactive_players(board)
       return {
         board,
-        nonlosers: players.map((_, i)=>i).filter(i=>!ls.includes(i)),
+        active_players: players.map((_, i)=>i).filter(i=>!inactives.includes(i)),
         selection: MISSING,
         turn: (turn + 1) % players.length,
       }
@@ -269,18 +360,24 @@ class Chess extends Component {
   }
   render(){
     const {state} = this
-    const {board, nonlosers, selection, turn} = state
+    const {board, active_players, selection, turn} = state
     const spaces = Array(SIZE*SIZE)
     const player = players[turn]
-    const winner = (nonlosers.length === 1) && nonlosers[0]
+    const winner = (active_players.length === 1) && active_players[0]
     const wp = (winner > MISSING) && players[winner]
     const sp = !wp && (selection > MISSING) && pieces_by_char[board[selection]]
-    const width = Math.min(window.innerHeight, window.innerWidth)
-    const size = width * .125
+    const {innerHeight, innerWidth} = window
+    const horizontal = (innerWidth > innerHeight + 144)
+    const width = horizontal ?
+      innerHeight :
+      Math.min(innerHeight-48, innerWidth)
+    const size = width / SIZE
     const fontSize = size*.5
+    // console.log(board.join(''))
     for(let i = spaces.length - 1; i >= 0; --i){
       const char = board[i]
       const piece = pieces_by_char[char]
+      if(!piece){ throw(`${char} pieces_by_char`) }
       const {p} = piece
       const selected = !wp && (i === selection)
       const available = sp && sp.move(selection, i, board)
@@ -294,7 +391,7 @@ class Chess extends Component {
             'space',
             'p'+p,
             wp ? '' : ('t'+turn),
-            ((getY(i) % 2) === (i % 2)) ? 'bg0' : 'bg1',
+            ((getY(i) % 2) === (getX(i) % 2)) ? 'bg0' : 'bg1',
             (available || selected) ? 'available' : '',
             selectable ? 'selectable' : '',
           ].join(' ')}
@@ -317,17 +414,26 @@ class Chess extends Component {
       </div>
     )
     return (
-      <div className="Game">
+      <div className="Game" style={{flexDirection: horizontal ? 'row' : 'column'}}>
         <div className="Chess" style={{width, height:width, fontSize}}>
           {rows}
         </div>
-        {wp
-          ? <p><span style={{color:wp.color}}>{wp.name}</span> is the victor</p>
-          : <p style={{color:player.color}}>{player.name} to move</p>
-        }
+        <div className="row grow" style={{
+            flexDirection: horizontal ? 'column' : 'row',
+            maxWidth: horizontal ? 'inherit' : width + 'px',
+          }}>
+          <div className="grow">
+            {wp
+              ? <p><span style={{color:wp.color}}>{wp.name}</span> is the victor.</p>
+              : <p style={{color:player.color}}>{player.name} to move</p>
+            }
+            </div>
+          <button className="reset" onClick={()=>this.resetState()}>
+            <span>New Game</span>
+          </button>
+        </div>
       </div>
     )
   }
 }
-
 export default Chess

@@ -4,14 +4,14 @@
   "private": true,
   "scripts": {
     "start": "react-scripts start",
-    "build": "set PUBLIC_URL=/game/chess&& react-scripts build",
+    "build": "PUBLIC_URL=/game/chess react-scripts build",
     "test": "react-scripts test --env=jsdom",
     "eject": "react-scripts eject"
   },
   "dependencies": {
-    "react": "^16.13.1",
-    "react-dom": "^16.13.1",
-    "react-scripts": "^3.4.3"
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2",
+    "react-scripts": "^4.0.3"
   },
   "browserslist": {
     "production": [

@@ -3,7 +3,7 @@ import React, {Component} from 'react'
 import Game from './game/component'
 // import logo from './logo.svg'
 import './App.css'
-const title = 'Chess'
+const title = 'FanChess'
 
 class App extends Component {
   render(){
