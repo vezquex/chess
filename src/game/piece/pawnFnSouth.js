@@ -14,10 +14,10 @@ h('defs', null,
     h('rect', {height:'1', width:'1', transform:'rotate(45 .5 .5)'}),
   ),
 ),
-two && h('rect', {id, height:'.5', width:'1', x:'2', y:'4.5'}),
-h('use', {x:'0', y, xlinkHref, className:piece.move(i, getI([a-1, b+1]), board) ? null : 'off'}),
+two && h('rect', {id, height:'.6', width:'.6', x:'2.2', y:'4.2'}),
+h('use', {x:'1', y, xlinkHref, className:piece.move(i, getI([a-1, b+1]), board) ? null : 'off'}),
 h('use', {x:'2', y, xlinkHref, className:piece.move(i, getI([a, b+1]), board) ? null : 'off'}),
-h('use', {x:'4', y, xlinkHref, className:piece.move(i, getI([a+1, b+1]), board) ? null : 'off'}),
+h('use', {x:'3', y, xlinkHref, className:piece.move(i, getI([a+1, b+1]), board) ? null : 'off'}),
 piece.goal && h('use', {xlinkHref:'#pawnFnGoal', transform:'translate(2.5 2.5)'}),
 )
 }
