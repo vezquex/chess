@@ -1,4 +1,4 @@
-import React, {createElement as h} from 'react'
+import {createElement as h} from 'react'
 const id = 'bishopFn1'
 const xlinkHref = '#'+id
 export default ({board, getI, getPos, i, piece}) => {
@@ -12,10 +12,10 @@ h('defs', null,
     h('rect', {height:'1', width:'1', transform:'rotate(45 .5 .5)'}),
   ),
 ),
-<g transform="rotate(45, 2.5, 2.5)" className="off">
-  <rect x="2" y="0" height="5" width="1"/>
-  <rect x="0" y="2" height="1" width="5"/>
-</g>,
+h('g', {transform:"rotate(45, 2.5, 2.5)", className:"off"},
+  h('rect', {x:"2", y:"0", height:"5", width:"1"}),
+  h('rect', {x:"0", y:"2", height:"1", width:"5"}),
+),
 piece.move(i, getI([x-1, y-1]), board) && h('use', {xlinkHref, transform:'rotate(-45, 2.5, 2.5)'}),
 piece.move(i, getI([x+1, y-1]), board) && h('use', {xlinkHref, transform:'rotate(45, 2.5, 2.5)'}),
 piece.move(i, getI([x-1, y+1]), board) && h('use', {xlinkHref, transform:'rotate(-135, 2.5, 2.5)'}),

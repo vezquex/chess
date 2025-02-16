@@ -1,4 +1,4 @@
-import React, {createElement as h} from 'react'
+import {createElement as h} from 'react'
 const {cos, PI, sin} = Math
 const tau = 2 * PI
 const id = 'queenFnX'
@@ -27,10 +27,10 @@ const d = 'M' + ds.map((on, i)  =>on ? l(i) : '').join('').slice(1)
 return h('svg', {version:'1.1', xmlns:'http://www.w3.org/2000/svg',
 viewBox:'-1 -1 2 2', strokeWidth:0},
 h('defs', null,
-  <g id={id}>
-    <rect x="-.2" y="-1" height="2" width=".4"/>
-    <rect x="-1" y="-.2" height=".4" width="2"/>
-  </g>,
+  h('g', {id},
+    h('rect', {x:"-.2", y:"-1", height:"2", width:".4"}),
+    h('rect', {x:"-1", y:"-.2", height:".4", width:"2"}),
+  ),
   h('rect', {id:'queenFnGoal', height:'1', width:'1'}),
 ),
 h('g', {className:'off'},
